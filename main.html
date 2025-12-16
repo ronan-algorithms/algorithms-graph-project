@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,100..900;1,100..900&display=swap");
+
+      input, button {
+        font-family: "Inter Tight", sans-serif;
+      }
+
+      div {
+        width: 20rem;
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translateX(-50%) translateY(-50%);
+      }
+
+      button {
+        background-color: oklch(68.5% 0.169 237.323);
+        color: white;
+        width: 100%;
+        padding: 1rem;
+        border: 0px;
+        outline: none;
+        border-radius: .2rem;
+        font-weight: 600;
+        margin-top: .5rem;
+        cursor: pointer;
+        font-size: 1.1rem;
+        transition: opacity .3s;
+      }
+
+      button:hover {
+        opacity: .7;
+      }
+
+      input {
+        background-color: white;
+        width: calc(100% - calc(0px + 1rem));
+        padding: .5rem;
+        border: 0px;
+        border-radius: .2rem;
+        text-align: center;
+        font-size: 5rem;
+        font-weight: 800;
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+        <input type="number" placeholder="Miles" />
+    <button onclick="createRoute()">Create Route</button>
+    </div>
+  </body>
+  <script>
+    async function createRoute() {
+      let miles = Number(document.querySelector("input").value);
+
+      if (!miles || miles == 0) {
+        alert("Please enter a value for miles.");
+      } else {
+        document.querySelector("button").style.display = "none";
+        let data = await (await fetch(`/generate/${miles.toString()}`)).json();
+
+        let uuid = data.uuid;
+
+        setInterval(async function () {
+          let { ready } = await (await fetch(`/isready/${uuid}/`)).json();
+          if (ready) {
+            window.location.href = `/data/${uuid}/`;
+          }
+        }, 1000);
+      }
+    }
+  </script>
+</html>
