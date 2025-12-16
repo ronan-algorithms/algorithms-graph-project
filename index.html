@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
+    <link
+      href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css"
+      rel="stylesheet"
+    />
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,100..900;1,100..900&display=swap");
+
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      #map {
+        width: 100vw;
+        height: 100vh;
+      }
+
+      button.back {
+        background-color: oklch(68.5% 0.169 237.323);
+        color: white;
+        padding: 0.5rem;
+        border: 0px;
+        outline: none;
+        border-radius: 0.2rem;
+        font-weight: 600;
+        margin-top: 0.5rem;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: opacity 0.3s;
+        text-decoration: none;
+        position: fixed;
+        left: 1rem;
+        top: 1rem;
+        z-index: 999999;
+        font-family: "Inter Tight", sans-serif;
+      }
+
+      .mileage {
+        color: oklch(68.5% 0.169 237.323);
+        background-color: white;
+        padding: 0.5rem;
+        border: 0px;
+        outline: none;
+        border-radius: 0.2rem;
+        font-weight: 600;
+        margin-top: 0.5rem;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: opacity 0.3s;
+        text-decoration: none;
+        position: fixed;
+        right: 1rem;
+        top: 1rem;
+        z-index: 999999;
+        font-family: "Inter Tight", sans-serif;
+      }
+
+      .mile-marker {
+        background-color: #0074d9;
+        height: 1.7rem;
+        width: 1.7rem;
+        border-radius: 0.85rem;
+      }
+
+      .mile-marker div {
+        font-family: "Inter Tight", sans-serif;
+        color: white;
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+
+  <body>
+    <a href="/"><button class="back">New Route</button></a>
+    <div class="mileage"><%= mileage %></div>
+    <div id="map"></div>
+
+    <script>
+      mapboxgl.accessToken = 'pk.eyJ1IjoicmdhbnR6b3MiLCJhIjoiY2x3MnBmcjZhMGozaDJrcGUydzM0OWljcyJ9.Mx6QWxgBklYMMutJ-bp6QQ';
+
+      const map = new mapboxgl.Map({
+        container: 'map',
+        style: 'mapbox://styles/mapbox/streets-v12',
+        center: [-122.75, 45.47],
+        zoom: 13
+      });
+
+      const points = <%- JSON.stringify(data) %>;
+          const coordinates = points.map(p => [p.lon, p.lat]);
+
+          const geojson = {
+            type: 'Feature',
+            geometry: {
+              type: 'LineString',
+              coordinates: coordinates
+            },
+            properties: {}
+          };
+
+          map.on('load', () => {
+            map.addSource('path', { type: 'geojson', data: geojson });
+            map.addLayer({
+              id: 'path-line',
+              type: 'line',
+              source: 'path',
+              layout: { 'line-join': 'round', 'line-cap': 'round' },
+              paint: {
+                'line-color': '#0074D9',
+                'line-width': 4
+              }
+            });
+
+            points.forEach((p, i) => {
+              if (p.marker) {
+                const el = document.createElement('div');
+                el.className = 'mile-marker';
+
+                const markerLabel = document.createElement('div');
+                markerLabel.textContent = p.marker.split(".")[0]
+                markerLabel.style.position = 'absolute';
+                markerLabel.style.transform = 'translate(-50%, -50%)';
+
+                el.appendChild(markerLabel);
+
+                new mapboxgl.Marker(el)
+                  .setLngLat([p.lon, p.lat])
+                  .addTo(map);
+              }
+            });
+
+            const bounds = coordinates.reduce((b, coord) => b.extend(coord), new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
+            map.fitBounds(bounds, { padding: 40 });
+          });
+    </script>
+  </body>
+</html>
